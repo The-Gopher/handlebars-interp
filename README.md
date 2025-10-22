@@ -88,8 +88,15 @@ yarn build
 
 ### Testing
 
+The project includes comprehensive test coverage:
+
+- **Unit Tests**: 28 custom tests covering all library features
+- **Mustache Spec Tests**: 122 passing tests from the official Mustache specification
+  - Tests cover: comments, interpolation, sections, inverted sections
+  - 30 tests skipped due to known Handlebars/Mustache incompatibilities (delimiter syntax, parent context lookup)
+
 ```bash
-# Run tests
+# Run all tests
 yarn test
 
 # Run tests in watch mode

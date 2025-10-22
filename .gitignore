@@ -6,7 +6,6 @@
 npm-debug.log
 .idea
 /yarn-error.log
-/yarn.lock
 node_modules
 /handlebars-release.tgz
 .nyc_output

@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "npx -p typescript tsc",
-    "prepublishOnly": "npm run build"
+    "build": "tsc",
+    "prepublishOnly": "yarn build"
   },
   "keywords": [
     "handlebars",

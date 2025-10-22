@@ -58,6 +58,8 @@ function processStatement(
       return processMustacheStatement(statement as MustacheStatement, context);
     case "BlockStatement":
       return processBlockStatement(statement as BlockStatement, context);
+    case "CommentStatement":
+      return [];
   }
   throw new Error(`Unsupported node type: ${(statement as any).type}`);
   return [];

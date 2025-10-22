@@ -79,14 +79,15 @@ function processBlockStatement(
   context: InterpContext
 ): string[] {
   // For simplicity, only handle "if" blocks here
-  if (node.path.original === "if") {
-    return processIfBlock(node, context);
-  } else if (node.path.original === "unless") {
-    return processUnlessBlock(node, context);
-  } else if (node.path.original === "each") {
-    return processEachBlock(node, context);
-  } else if (node.path.original === "with") {
-    return processWithBlock(node, context);
+  switch (node.path.original) {
+    case "if":
+      return processIfBlock(node, context);
+    case "unless":
+      return processUnlessBlock(node, context);
+    case "each":
+      return processEachBlock(node, context);
+    case "with":
+      return processWithBlock(node, context);
   }
   throw new Error(`Unsupported block helper: ${node.path.original}`);
 }
@@ -199,6 +200,10 @@ function processPathExpression(
   context: InterpContext
 ): any[] {
   let value = context.variables;
+  if (node.original === "this") {
+    return [context.variables["this"]];
+  }
+  
   for (const part of node.parts) {
     if (typeof part === "string") {
       if (value && part in value) {

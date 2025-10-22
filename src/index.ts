@@ -1,5 +1,15 @@
 import { parse } from "@handlebars/parser";
-import Handlebars from 'handlebars';
+import {
+  BlockStatement,
+  ContentStatement,
+  Literal,
+  MustacheStatement,
+  PathExpression,
+  Program,
+  Statement,
+  SubExpression,
+} from "@handlebars/parser/types/ast";
+import Handlebars from "handlebars";
 
 /**
  * Options for the interp function
@@ -26,6 +36,13 @@ export interface InterpOptions {
   compileOptions?: CompileOptions;
 }
 
+type NodeType =
+  | ContentStatement
+  | MustacheStatement
+  | SubExpression
+  | PathExpression
+  | BlockStatement;
+
 /**
  * Interpolates a Handlebars template string with the provided variables
  *
@@ -46,7 +63,34 @@ export function interp(
   options: InterpOptions = {}
 ): string {
   const ast = parse(template);
-  return "";
+
+  function processNode(statement: NodeType): string[] {
+    switch (statement.type) {
+      case "ContentStatement":
+        return [statement.value];
+      case "MustacheStatement":
+        const path = processNode(statement.path as NodeType);
+        let variable = variables;
+        for (const p of path) {
+          if (variable && variable.hasOwnProperty(p)) {
+            variable = variable[p];
+          } else {
+            return [""];
+          }
+        }
+        return [variable.toString()];
+      case "BlockStatement":
+        return [];
+      case "PathExpression":
+        return statement.parts.flatMap((part: SubExpression | string) =>
+          typeof part === "string" ? [part] : processNode(part as NodeType)
+        );
+    }
+    console.log(JSON.stringify(statement, null, 2));
+    throw new Error(`Unsupported node type: ${(statement as any).type}`);
+  }
+
+  return ast.body.flatMap((n) => processNode(n as any)).join("");
 }
 
 export default interp;

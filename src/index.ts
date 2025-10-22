@@ -85,6 +85,8 @@ function processBlockStatement(
     return processUnlessBlock(node, context);
   } else if (node.path.original === "each") {
     return processEachBlock(node, context);
+  } else if (node.path.original === "with") {
+    return processWithBlock(node, context);
   }
   throw new Error(`Unsupported block helper: ${node.path.original}`);
 }
@@ -116,7 +118,7 @@ function processUnlessBlock(
   node: BlockStatement,
   context: InterpContext
 ): string[] {
- const conditionValues = node.params.flatMap((param) =>
+  const conditionValues = node.params.flatMap((param) =>
     processExpression(param, context)
   );
   if (conditionValues.length !== 1) {
@@ -154,6 +156,27 @@ function processEachBlock(
     } else {
       throw new Error("Each block expects an array");
     }
+  });
+}
+
+function processWithBlock(
+  node: BlockStatement,
+  context: InterpContext
+): string[] {
+  const conditionValues = node.params.flatMap((param) =>
+    processExpression(param, context)
+  );
+  if (conditionValues.length !== 1) {
+    console.error("node.params:", JSON.stringify(node.params, null, 2));
+    throw new Error(
+      "If condition returned multiple values (not supported ATM)"
+    );
+  }
+  const [condition] = conditionValues;
+
+  return processProgram(node.program, {
+    variables: { ...context.variables, this: condition, ...(condition as any) },
+    options: context.options,
   });
 }
 

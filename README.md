@@ -78,6 +78,27 @@ Interpolates a Handlebars template string with the provided variables.
 
 See the `examples` directory for more usage examples.
 
+## Development
+
+### Building
+
+```bash
+yarn build
+```
+
+### Testing
+
+```bash
+# Run tests
+yarn test
+
+# Run tests in watch mode
+yarn test:watch
+
+# Run tests with coverage
+yarn test:coverage
+```
+
 ## License
 
 ISC

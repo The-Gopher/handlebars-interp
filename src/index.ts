@@ -81,6 +81,8 @@ function processBlockStatement(
   // For simplicity, only handle "if" blocks here
   if (node.path.original === "if") {
     return processIfBlock(node, context);
+  } else if (node.path.original === "unless") {
+    return processUnlessBlock(node, context);
   } else if (node.path.original === "each") {
     return processEachBlock(node, context);
   }
@@ -102,6 +104,29 @@ function processIfBlock(
   }
   const [condition] = conditionValues;
   if (condition) {
+    return processProgram(node.program, context);
+  } else if (node.inverse) {
+    return processProgram(node.inverse, context);
+  } else {
+    return [];
+  }
+}
+
+function processUnlessBlock(
+  node: BlockStatement,
+  context: InterpContext
+): string[] {
+ const conditionValues = node.params.flatMap((param) =>
+    processExpression(param, context)
+  );
+  if (conditionValues.length !== 1) {
+    console.error("node.params:", JSON.stringify(node.params, null, 2));
+    throw new Error(
+      "If condition returned multiple values (not supported ATM)"
+    );
+  }
+  const [condition] = conditionValues;
+  if (!condition) {
     return processProgram(node.program, context);
   } else if (node.inverse) {
     return processProgram(node.inverse, context);

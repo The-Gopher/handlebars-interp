@@ -71,7 +71,11 @@ function processMustacheStatement(
   context: InterpContext
 ): string[] {
   const value = processExpression(node.path, context);
-  return value.map((v) => String(v));
+  if (value === undefined) {
+    return [];
+  }
+  // TODO - if value is a function (helper), call it with params
+  return [String(value)];
 }
 
 function processBlockStatement(
@@ -142,22 +146,27 @@ function processEachBlock(
   node: BlockStatement,
   context: InterpContext
 ): string[] {
-  const conditionValues = node.params.flatMap((param) =>
+  if (node.params.length !== 1) {
+    throw new Error(
+      "Each condition returned multiple values (not supported ATM)"
+    );
+  }
+
+  const collection = node.params.flatMap((param) =>
     processExpression(param, context)
   );
 
-  return conditionValues.flatMap((collection) => {
-    if (Array.isArray(collection)) {
-      return collection.flatMap((item) =>
-        processProgram(node.program, {
-          variables: { ...context.variables, this: item, ...item },
-          options: context.options,
-        })
-      );
-    } else {
-      throw new Error("Each block expects an array");
-    }
-  });
+  if (!Array.isArray(collection)) {
+    console.error("collection:", JSON.stringify(collection, null, 2));
+    throw new Error("Each block expects an array");
+  }
+
+  return (collection as any[]).flatMap((item) =>
+    processProgram(node.program, {
+      variables: { ...context.variables, this: item, ...item },
+      options: context.options,
+    })
+  );
 }
 
 function processWithBlock(
@@ -184,10 +193,10 @@ function processWithBlock(
 function processExpression(
   node: Expression,
   context: InterpContext
-): (string | number | boolean)[] {
+): string | number | boolean {
   switch (node.type) {
     case "StringLiteral":
-      return [(node as StringLiteral).value];
+      return (node as StringLiteral).value;
     case "PathExpression":
       return processPathExpression(node as PathExpression, context);
     default:
@@ -198,12 +207,12 @@ function processExpression(
 function processPathExpression(
   node: PathExpression,
   context: InterpContext
-): any[] {
+): any {
   let value = context.variables;
   if (node.original === "this") {
-    return [context.variables["this"]];
+    return context.variables["this"];
   }
-  
+
   for (const part of node.parts) {
     if (typeof part === "string") {
       if (value && part in value) {
@@ -212,7 +221,7 @@ function processPathExpression(
         if (context.options.strict) {
           throw new Error(`Missing property: ${part}`);
         } else {
-          return [];
+          return undefined;
         }
       }
     } else {
@@ -221,7 +230,7 @@ function processPathExpression(
       throw new Error("Sub-expressions are not supported yet");
     }
   }
-  return [value];
+  return value;
 }
 
 /**

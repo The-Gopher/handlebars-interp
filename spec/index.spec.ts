@@ -86,7 +86,6 @@ describe("interp", () => {
       });
       expect(result).toBe("John - john@example.com");
     });
-    /*
 
   });
 
@@ -100,6 +99,7 @@ describe("interp", () => {
       const result = interp('{{uppercase name}}', { name: 'world' }, options);
       expect(result).toBe('WORLD');
     });
+    /*
 
     it('should support multiple custom helpers', () => {
       const options: InterpOptions = {

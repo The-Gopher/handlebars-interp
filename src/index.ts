@@ -43,6 +43,22 @@ type NodeType =
   | PathExpression
   | BlockStatement;
 
+function processProgram(program: Program): string[] {
+  return program.body.flatMap((n) => processStatement(n as any));
+}
+
+function processStatement(statement: Statement): string[] {
+  switch (statement.type) {
+    case "ContentStatement":
+      return [statement.value];
+    case "MustacheStatement":
+      const path = processStatement(statement.path as NodeType);
+      // For simplicity, just return the variable name here
+      return [path.join(".")];
+  }
+  throw new Error(`Unsupported node type: ${(statement as any).type}`);
+  return [];
+}
 /**
  * Interpolates a Handlebars template string with the provided variables
  *
@@ -100,6 +116,24 @@ export function interp(
             } else if (statement.inverse) {
               return statement.inverse.body.flatMap((n) =>
                 processNode(n as any)
+              );
+            } else {
+              return [];
+            }
+          case "each":
+            const listPath = processNode(statement.params[0] as NodeType);
+            const listVar = lookupVariable(listPath);
+
+            if (Array.isArray(listVar)) {
+              return listVar.flatMap((item) =>
+                statement.program.body.flatMap((n) => {
+                  // For each iteration, we need to process the node with "this" set to the current item
+                  if (n.type === "MustacheStatement") {
+                    return [item.toString()];
+                  } else {
+                    return processNode(n as any);
+                  }
+                })
               );
             } else {
               return [];

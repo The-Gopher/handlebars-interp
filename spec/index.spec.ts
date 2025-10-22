@@ -59,32 +59,35 @@ describe("interp", () => {
       expect(result).toBe("hidden");
     });
 
+    it("should support each loops with arrays", () => {
+      const result = interp("{{#each items}}{{this}},{{/each}}", {
+        items: ["a", "b", "c"],
+      });
+      expect(result).toBe("a,b,c,");
+    });
+
+    it("should support each loops with objects", () => {
+      const result = interp("{{#each users}}{{name}},{{/each}}", {
+        users: [{ name: "Alice" }, { name: "Bob" }, { name: "Charlie" }],
+      });
+      expect(result).toBe("Alice,Bob,Charlie,");
+    });
+
+    it("should support unless conditionals", () => {
+      const result = interp("{{#unless isHidden}}visible{{/unless}}", {
+        isHidden: false,
+      });
+      expect(result).toBe("visible");
+    });
+
+    it("should support with block helpers", () => {
+      const result = interp("{{#with user}}{{name}} - {{email}}{{/with}}", {
+        user: { name: "John", email: "john@example.com" },
+      });
+      expect(result).toBe("John - john@example.com");
+    });
     /*
-    it('should support each loops with arrays', () => {
-      const result = interp('{{#each items}}{{this}},{{/each}}', {
-        items: ['a', 'b', 'c']
-      });
-      expect(result).toBe('a,b,c,');
-    });
 
-    it('should support each loops with objects', () => {
-      const result = interp('{{#each users}}{{name}},{{/each}}', {
-        users: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Charlie' }]
-      });
-      expect(result).toBe('Alice,Bob,Charlie,');
-    });
-
-    it('should support unless conditionals', () => {
-      const result = interp('{{#unless isHidden}}visible{{/unless}}', { isHidden: false });
-      expect(result).toBe('visible');
-    });
-
-    it('should support with block helpers', () => {
-      const result = interp('{{#with user}}{{name}} - {{email}}{{/with}}', {
-        user: { name: 'John', email: 'john@example.com' }
-      });
-      expect(result).toBe('John - john@example.com');
-    });
   });
 
   describe('Custom Helpers', () => {

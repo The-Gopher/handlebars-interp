@@ -74,8 +74,16 @@ function processMustacheStatement(
   if (value === undefined) {
     return [];
   }
-  // TODO - if value is a function (helper), call it with params
-  return [String(value)];
+
+  switch (typeof value) {
+    case "function":
+      const params = node.params.map((param) =>
+        processExpression(param, context)
+      );
+      return [value.apply(null, params)];
+    default:
+      return [String(value)];
+  }
 }
 
 function processBlockStatement(
@@ -190,10 +198,7 @@ function processWithBlock(
   });
 }
 
-function processExpression(
-  node: Expression,
-  context: InterpContext
-): string | number | boolean {
+function processExpression(node: Expression, context: InterpContext): any {
   switch (node.type) {
     case "StringLiteral":
       return (node as StringLiteral).value;
@@ -211,6 +216,14 @@ function processPathExpression(
   let value = context.variables;
   if (node.original === "this") {
     return context.variables["this"];
+  }
+
+  if (
+    node.parts.length === 1 &&
+    typeof node.parts[0] === "string" &&
+    context.options.helpers?.[node.parts[0]]
+  ) {
+    return context.options.helpers[node.parts[0]];
   }
 
   for (const part of node.parts) {

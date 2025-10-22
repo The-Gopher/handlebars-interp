@@ -2,11 +2,13 @@ import { parse } from "@handlebars/parser";
 import {
   BlockStatement,
   ContentStatement,
+  Expression,
   Literal,
   MustacheStatement,
   PathExpression,
   Program,
   Statement,
+  StringLiteral,
   SubExpression,
 } from "@handlebars/parser/types/ast";
 import Handlebars from "handlebars";
@@ -36,29 +38,139 @@ export interface InterpOptions {
   compileOptions?: CompileOptions;
 }
 
-type NodeType =
-  | ContentStatement
-  | MustacheStatement
-  | SubExpression
-  | PathExpression
-  | BlockStatement;
-
-function processProgram(program: Program): string[] {
-  return program.body.flatMap((n) => processStatement(n as any));
+export interface InterpContext {
+  variables: Record<string, any>;
+  options: InterpOptions;
 }
 
-function processStatement(statement: Statement): string[] {
+function processProgram(program: Program, context: InterpContext): string[] {
+  return program.body.flatMap((n) => processStatement(n as any, context));
+}
+
+function processStatement(
+  statement: Statement,
+  context: InterpContext
+): string[] {
   switch (statement.type) {
     case "ContentStatement":
-      return [statement.value];
+      return processContentStatement(statement as ContentStatement);
     case "MustacheStatement":
-      const path = processStatement(statement.path as NodeType);
-      // For simplicity, just return the variable name here
-      return [path.join(".")];
+      return processMustacheStatement(statement as MustacheStatement, context);
+    case "BlockStatement":
+      return processBlockStatement(statement as BlockStatement, context);
   }
   throw new Error(`Unsupported node type: ${(statement as any).type}`);
   return [];
 }
+function processContentStatement(node: ContentStatement): string[] {
+  return [node.value];
+}
+
+function processMustacheStatement(
+  node: MustacheStatement,
+  context: InterpContext
+): string[] {
+  const value = processExpression(node.path, context);
+  return value.map((v) => String(v));
+}
+
+function processBlockStatement(
+  node: BlockStatement,
+  context: InterpContext
+): string[] {
+  // For simplicity, only handle "if" blocks here
+  if (node.path.original === "if") {
+    return processIfBlock(node, context);
+  } else if (node.path.original === "each") {
+    return processEachBlock(node, context);
+  }
+  throw new Error(`Unsupported block helper: ${node.path.original}`);
+}
+
+function processIfBlock(
+  node: BlockStatement,
+  context: InterpContext
+): string[] {
+  const conditionValues = node.params.flatMap((param) =>
+    processExpression(param, context)
+  );
+  if (conditionValues.length !== 1) {
+    console.error("node.params:", JSON.stringify(node.params, null, 2));
+    throw new Error(
+      "If condition returned multiple values (not supported ATM)"
+    );
+  }
+  const [condition] = conditionValues;
+  if (condition) {
+    return processProgram(node.program, context);
+  } else if (node.inverse) {
+    return processProgram(node.inverse, context);
+  } else {
+    return [];
+  }
+}
+
+function processEachBlock(
+  node: BlockStatement,
+  context: InterpContext
+): string[] {
+  const conditionValues = node.params.flatMap((param) =>
+    processExpression(param, context)
+  );
+
+  return conditionValues.flatMap((collection) => {
+    if (Array.isArray(collection)) {
+      return collection.flatMap((item) =>
+        processProgram(node.program, {
+          variables: { ...context.variables, this: item, ...item },
+          options: context.options,
+        })
+      );
+    } else {
+      throw new Error("Each block expects an array");
+    }
+  });
+}
+
+function processExpression(
+  node: Expression,
+  context: InterpContext
+): (string | number | boolean)[] {
+  switch (node.type) {
+    case "StringLiteral":
+      return [(node as StringLiteral).value];
+    case "PathExpression":
+      return processPathExpression(node as PathExpression, context);
+    default:
+      throw new Error(`Unsupported expression type: ${(node as any).type}`);
+  }
+}
+
+function processPathExpression(
+  node: PathExpression,
+  context: InterpContext
+): any[] {
+  let value = context.variables;
+  for (const part of node.parts) {
+    if (typeof part === "string") {
+      if (value && part in value) {
+        value = value[part];
+      } else {
+        if (context.options.strict) {
+          throw new Error(`Missing property: ${part}`);
+        } else {
+          return [];
+        }
+      }
+    } else {
+      console.error("node: ", JSON.stringify(node, null, 2));
+      // Handle sub-expressions if needed
+      throw new Error("Sub-expressions are not supported yet");
+    }
+  }
+  return [value];
+}
+
 /**
  * Interpolates a Handlebars template string with the provided variables
  *
@@ -80,78 +192,7 @@ export function interp(
 ): string {
   const ast = parse(template);
 
-  function processNode(statement: NodeType): string[] {
-    function lookupVariable(path: string[]): any {
-      let value: any = variables;
-      for (const p of path) {
-        if (value && value.hasOwnProperty(p)) {
-          value = value[p];
-        } else {
-          return undefined;
-        }
-      }
-      return value;
-    }
-
-    switch (statement.type) {
-      case "ContentStatement":
-        return [statement.value];
-      case "MustacheStatement":
-        const path = processNode(statement.path as NodeType);
-        let value = lookupVariable(path);
-        if (value === undefined) {
-          return [];
-        }
-        return [value.toString()];
-      case "BlockStatement":
-        switch (statement.path.original) {
-          case "if":
-            const conditionPath = processNode(statement.params[0] as NodeType);
-            const conditionVar = lookupVariable(conditionPath);
-
-            if (conditionVar) {
-              return statement.program.body.flatMap((n) =>
-                processNode(n as any)
-              );
-            } else if (statement.inverse) {
-              return statement.inverse.body.flatMap((n) =>
-                processNode(n as any)
-              );
-            } else {
-              return [];
-            }
-          case "each":
-            const listPath = processNode(statement.params[0] as NodeType);
-            const listVar = lookupVariable(listPath);
-
-            if (Array.isArray(listVar)) {
-              return listVar.flatMap((item) =>
-                statement.program.body.flatMap((n) => {
-                  // For each iteration, we need to process the node with "this" set to the current item
-                  if (n.type === "MustacheStatement") {
-                    return [item.toString()];
-                  } else {
-                    return processNode(n as any);
-                  }
-                })
-              );
-            } else {
-              return [];
-            }
-          default:
-            console.warn(statement);
-            return [];
-        }
-      case "PathExpression":
-        return statement.parts.flatMap((part: SubExpression | string) =>
-          typeof part === "string" ? [part] : processNode(part as NodeType)
-        );
-    }
-    console.log(JSON.stringify(statement, null, 2));
-    throw new Error(`Unsupported node type: ${(statement as any).type}`);
-  }
-
-  return ast.body.flatMap((n) => processNode(n as any)).join("");
+  return processProgram(ast, { variables, options }).join("");
 }
 
 export default interp;

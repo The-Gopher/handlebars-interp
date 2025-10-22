@@ -71,7 +71,7 @@ function processMustacheStatement(
   context: InterpContext
 ): string[] {
   const value = processExpression(node.path, context);
-  if (value === undefined) {
+  if (value === undefined || value === null) {
     return [];
   }
 

@@ -86,42 +86,45 @@ describe("interp", () => {
       });
       expect(result).toBe("John - john@example.com");
     });
-
   });
 
-  describe('Custom Helpers', () => {
-    it('should support custom helpers', () => {
-      const options: InterpOptions = {
-        helpers: {
-          uppercase: (str: string) => str.toUpperCase()
-        }
-      };
-      const result = interp('{{uppercase name}}', { name: 'world' }, options);
-      expect(result).toBe('WORLD');
-    });
-    /*
-
-    it('should support multiple custom helpers', () => {
+  describe("Custom Helpers", () => {
+    it("should support custom helpers", () => {
       const options: InterpOptions = {
         helpers: {
           uppercase: (str: string) => str.toUpperCase(),
-          reverse: (str: string) => str.split('').reverse().join('')
-        }
+        },
       };
-      const result = interp('{{uppercase a}} {{reverse b}}', { a: 'hello', b: 'world' }, options);
-      expect(result).toBe('HELLO dlrow');
+      const result = interp("{{uppercase name}}", { name: "world" }, options);
+      expect(result).toBe("WORLD");
     });
 
-    it('should support helpers with multiple arguments', () => {
+    it("should support multiple custom helpers", () => {
       const options: InterpOptions = {
         helpers: {
-          add: (a: number, b: number) => a + b
-        }
+          uppercase: (str: string) => str.toUpperCase(),
+          reverse: (str: string) => str.split("").reverse().join(""),
+        },
       };
-      const result = interp('{{add x y}}', { x: 5, y: 3 }, options);
-      expect(result).toBe('8');
+      const result = interp(
+        "{{uppercase a}} {{reverse b}}",
+        { a: "hello", b: "world" },
+        options
+      );
+      expect(result).toBe("HELLO dlrow");
     });
 
+    it("should support helpers with multiple arguments", () => {
+      const options: InterpOptions = {
+        helpers: {
+          add: (a: number, b: number) => a + b,
+        },
+      };
+      const result = interp("{{add x y}}", { x: 5, y: 3 }, options);
+      expect(result).toBe("8");
+    });
+
+    /*
     it('should support block helpers', () => {
       const options: InterpOptions = {
         helpers: {
@@ -133,57 +136,58 @@ describe("interp", () => {
       const result = interp('{{#bold}}Hello {{name}}{{/bold}}', { name: 'World' }, options);
       expect(result).toBe('<b>Hello World</b>');
     });
+    */
   });
 
-  describe('Strict Mode', () => {
-    it('should throw error on missing variables in strict mode', () => {
+  describe("Strict Mode", () => {
+    it("should throw error on missing variables in strict mode", () => {
       const options: InterpOptions = { strict: true };
       expect(() => {
-        interp('Hello {{name}}!', {}, options);
+        interp("Hello {{name}}!", {}, options);
       }).toThrow();
     });
 
-    it('should not throw error when all variables are provided in strict mode', () => {
+    it("should not throw error when all variables are provided in strict mode", () => {
       const options: InterpOptions = { strict: true };
-      const result = interp('Hello {{name}}!', { name: 'World' }, options);
-      expect(result).toBe('Hello World!');
+      const result = interp("Hello {{name}}!", { name: "World" }, options);
+      expect(result).toBe("Hello World!");
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle special characters in variables', () => {
-      const result = interp('{{msg}}', { msg: 'Hello "World" & <friends>' });
-      expect(result).toContain('Hello');
+  describe("Edge Cases", () => {
+    it("should handle special characters in variables", () => {
+      const result = interp("{{msg}}", { msg: 'Hello "World" & <friends>' });
+      expect(result).toContain("Hello");
     });
 
-    it('should handle numbers', () => {
-      const result = interp('Count: {{count}}', { count: 42 });
-      expect(result).toBe('Count: 42');
+    it("should handle numbers", () => {
+      const result = interp("Count: {{count}}", { count: 42 });
+      expect(result).toBe("Count: 42");
     });
 
-    it('should handle booleans', () => {
-      const result = interp('Active: {{isActive}}', { isActive: true });
-      expect(result).toBe('Active: true');
+    it("should handle booleans", () => {
+      const result = interp("Active: {{isActive}}", { isActive: true });
+      expect(result).toBe("Active: true");
     });
 
-    it('should handle null values', () => {
-      const result = interp('Value: {{value}}', { value: null });
-      expect(result).toBe('Value: ');
+    it("should handle null values", () => {
+      const result = interp("Value: {{value}}", { value: null });
+      expect(result).toBe("Value: ");
     });
 
-    it('should handle undefined values', () => {
-      const result = interp('Value: {{value}}', { value: undefined });
-      expect(result).toBe('Value: ');
+    it("should handle undefined values", () => {
+      const result = interp("Value: {{value}}", { value: undefined });
+      expect(result).toBe("Value: ");
     });
 
-    it('should handle arrays directly', () => {
-      const result = interp('{{items}}', { items: [1, 2, 3] });
-      expect(result).toBe('1,2,3');
+    it("should handle arrays directly", () => {
+      const result = interp("{{items}}", { items: [1, 2, 3] });
+      expect(result).toBe("1,2,3");
     });
   });
 
-  describe('Complex Templates', () => {
-    it('should handle complex nested templates', () => {
+  describe("Complex Templates", () => {
+    it("should handle complex nested templates", () => {
       const template = `
         <div>
           <h1>{{title}}</h1>
@@ -195,44 +199,42 @@ describe("interp", () => {
         </div>
       `;
       const result = interp(template, {
-        title: 'Shopping List',
-        items: ['Apples', 'Bananas', 'Oranges']
+        title: "Shopping List",
+        items: ["Apples", "Bananas", "Oranges"],
       });
-      expect(result).toContain('<h1>Shopping List</h1>');
-      expect(result).toContain('<li>Apples</li>');
-      expect(result).toContain('<li>Bananas</li>');
-      expect(result).toContain('<li>Oranges</li>');
+      expect(result).toContain("<h1>Shopping List</h1>");
+      expect(result).toContain("<li>Apples</li>");
+      expect(result).toContain("<li>Bananas</li>");
+      expect(result).toContain("<li>Oranges</li>");
     });
 
-    it('should handle deeply nested objects', () => {
-      const result = interp('{{a.b.c.d}}', {
-        a: { b: { c: { d: 'deep value' } } }
+    it("should handle deeply nested objects", () => {
+      const result = interp("{{a.b.c.d}}", {
+        a: { b: { c: { d: "deep value" } } },
       });
-      expect(result).toBe('deep value');
+      expect(result).toBe("deep value");
     });
   });
 
-  describe('Instance Isolation', () => {
-    it('should create separate Handlebars instances (no pollution)', () => {
+  describe("Instance Isolation", () => {
+    it("should create separate Handlebars instances (no pollution)", () => {
       const options1: InterpOptions = {
         helpers: {
-          helper1: () => 'helper1'
-        }
+          helper1: () => "helper1",
+        },
       };
-      
+
       const options2: InterpOptions = {
         helpers: {
-          helper2: () => 'helper2'
-        }
+          helper2: () => "helper2",
+        },
       };
 
-      const result1 = interp('{{helper1}}', {}, options1);
-      const result2 = interp('{{helper2}}', {}, options2);
+      const result1 = interp("{{helper1}}", {}, options1);
+      const result2 = interp("{{helper2}}", {}, options2);
 
-      expect(result1).toBe('helper1');
-      expect(result2).toBe('helper2');
+      expect(result1).toBe("helper1");
+      expect(result2).toBe("helper2");
     });
-  });
-  */
   });
 });

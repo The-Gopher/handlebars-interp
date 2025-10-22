@@ -9,7 +9,7 @@ module.exports = {
     ...tsJestTransformCfg,
   },
   testMatch: [
-    "**/__tests__/**/*.test.ts"
+    "**/spec/**/*.spec.ts"
   ],
   coveragePathIgnorePatterns: [
     "/node_modules/",

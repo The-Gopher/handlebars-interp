@@ -1,4 +1,4 @@
-import { interp, InterpOptions } from '../index';
+import { interp, InterpOptions } from '../src/index';
 
 describe('interp', () => {
   describe('Basic Interpolation', () => {

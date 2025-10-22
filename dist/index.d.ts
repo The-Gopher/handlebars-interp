@@ -10,7 +10,7 @@ export interface InterpOptions {
     /**
      * Custom partials to register with Handlebars
      */
-    partials?: Record<string, Handlebars.Template>;
+    partials?: Record<string, string | Handlebars.Template>;
     /**
      * Whether to use strict mode (throws errors on missing properties)
      */

@@ -65,22 +65,49 @@ export function interp(
   const ast = parse(template);
 
   function processNode(statement: NodeType): string[] {
+    function lookupVariable(path: string[]): any {
+      let value: any = variables;
+      for (const p of path) {
+        if (value && value.hasOwnProperty(p)) {
+          value = value[p];
+        } else {
+          return undefined;
+        }
+      }
+      return value;
+    }
+
     switch (statement.type) {
       case "ContentStatement":
         return [statement.value];
       case "MustacheStatement":
         const path = processNode(statement.path as NodeType);
-        let variable = variables;
-        for (const p of path) {
-          if (variable && variable.hasOwnProperty(p)) {
-            variable = variable[p];
-          } else {
-            return [""];
-          }
+        let value = lookupVariable(path);
+        if (value === undefined) {
+          return [];
         }
-        return [variable.toString()];
+        return [value.toString()];
       case "BlockStatement":
-        return [];
+        switch (statement.path.original) {
+          case "if":
+            const conditionPath = processNode(statement.params[0] as NodeType);
+            const conditionVar = lookupVariable(conditionPath);
+
+            if (conditionVar) {
+              return statement.program.body.flatMap((n) =>
+                processNode(n as any)
+              );
+            } else if (statement.inverse) {
+              return statement.inverse.body.flatMap((n) =>
+                processNode(n as any)
+              );
+            } else {
+              return [];
+            }
+          default:
+            console.warn(statement);
+            return [];
+        }
       case "PathExpression":
         return statement.parts.flatMap((part: SubExpression | string) =>
           typeof part === "string" ? [part] : processNode(part as NodeType)

@@ -47,18 +47,19 @@ describe("interp", () => {
       expect(result).toBe("visible");
     });
 
+    it("should support if conditionals - falsy", () => {
+      const result = interp("{{#if show}}visible{{/if}}", { show: false });
+      expect(result).toBe("");
+    });
+
+    it("should support if/else conditionals", () => {
+      const result = interp("{{#if show}}visible{{else}}hidden{{/if}}", {
+        show: false,
+      });
+      expect(result).toBe("hidden");
+    });
+
     /*
-
-    it('should support if conditionals - falsy', () => {
-      const result = interp('{{#if show}}visible{{/if}}', { show: false });
-      expect(result).toBe('');
-    });
-
-    it('should support if/else conditionals', () => {
-      const result = interp('{{#if show}}visible{{else}}hidden{{/if}}', { show: false });
-      expect(result).toBe('hidden');
-    });
-
     it('should support each loops with arrays', () => {
       const result = interp('{{#each items}}{{this}},{{/each}}', {
         items: ['a', 'b', 'c']

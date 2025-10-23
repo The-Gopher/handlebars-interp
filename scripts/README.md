@@ -26,7 +26,7 @@ node scripts/generate-tests.js
 To enable additional test suites, edit the `enabledFiles` array in `scripts/generate-tests.js`:
 
 ```javascript
-const enabledFiles = ["comments.json", "interpolation.json", "new-suite.json"];
+const enabledFiles = ['comments.json', 'interpolation.json', 'new-suite.json'];
 ```
 
 Then run `yarn generate-tests` to regenerate the test files.
@@ -34,11 +34,13 @@ Then run `yarn generate-tests` to regenerate the test files.
 ### Generated files
 
 The generated test files are:
+
 - Auto-generated (DO NOT EDIT manually)
 - Gitignored (should not be committed)
 - Created before running tests
 
 Each generated test file:
+
 - Imports the `interp` function from the main source
 - Contains one test case per test in the JSON spec
 - Uses Jest's `describe` and `it` blocks

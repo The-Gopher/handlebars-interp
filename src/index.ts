@@ -1,4 +1,4 @@
-import { parse } from "@handlebars/parser";
+import { parse } from '@handlebars/parser';
 import {
   BlockStatement,
   ContentStatement,
@@ -8,8 +8,8 @@ import {
   Program,
   Statement,
   StringLiteral,
-} from "@handlebars/parser/types/ast";
-import Handlebars from "handlebars";
+} from '@handlebars/parser/types/ast';
+import Handlebars from 'handlebars';
 
 /**
  * Options for the interp function
@@ -52,13 +52,13 @@ function processStatement(
   context: InterpContext
 ): string[] {
   switch (statement.type) {
-    case "ContentStatement":
+    case 'ContentStatement':
       return processContentStatement(statement as ContentStatement);
-    case "MustacheStatement":
+    case 'MustacheStatement':
       return processMustacheStatement(statement as MustacheStatement, context);
-    case "BlockStatement":
+    case 'BlockStatement':
       return processBlockStatement(statement as BlockStatement, context);
-    case "CommentStatement":
+    case 'CommentStatement':
       return [];
   }
   throw new Error(`Unsupported node type: ${(statement as any).type}`);
@@ -79,7 +79,7 @@ function processMustacheStatement(
 
   let ret = [];
   switch (typeof value) {
-    case "function":
+    case 'function':
       const params = node.params.map((param) =>
         processExpression(param, context)
       );
@@ -105,13 +105,13 @@ function processBlockStatement(
 ): string[] {
   // For simplicity, only handle "if" blocks here
   switch (node.path.original) {
-    case "if":
+    case 'if':
       return processIfBlock(node, context);
-    case "unless":
+    case 'unless':
       return processUnlessBlock(node, context);
-    case "each":
+    case 'each':
       return processEachBlock(node, context);
-    case "with":
+    case 'with':
       return processWithBlock(node, context);
     default:
       return processCustomBlock(node, context);
@@ -128,9 +128,9 @@ function processIfBlock(
     processExpression(param, context)
   );
   if (conditionValues.length !== 1) {
-    console.error("node.params:", JSON.stringify(node.params, null, 2));
+    console.error('node.params:', JSON.stringify(node.params, null, 2));
     throw new Error(
-      "If condition returned multiple values (not supported ATM)"
+      'If condition returned multiple values (not supported ATM)'
     );
   }
   const [condition] = conditionValues;
@@ -151,9 +151,9 @@ function processUnlessBlock(
     processExpression(param, context)
   );
   if (conditionValues.length !== 1) {
-    console.error("node.params:", JSON.stringify(node.params, null, 2));
+    console.error('node.params:', JSON.stringify(node.params, null, 2));
     throw new Error(
-      "If condition returned multiple values (not supported ATM)"
+      'If condition returned multiple values (not supported ATM)'
     );
   }
   const [condition] = conditionValues;
@@ -172,7 +172,7 @@ function processEachBlock(
 ): string[] {
   if (node.params.length !== 1) {
     throw new Error(
-      "Each condition returned multiple values (not supported ATM)"
+      'Each condition returned multiple values (not supported ATM)'
     );
   }
 
@@ -181,8 +181,8 @@ function processEachBlock(
   );
 
   if (!Array.isArray(collection)) {
-    console.error("collection:", JSON.stringify(collection, null, 2));
-    throw new Error("Each block expects an array");
+    console.error('collection:', JSON.stringify(collection, null, 2));
+    throw new Error('Each block expects an array');
   }
 
   return (collection as any[]).flatMap((item) =>
@@ -201,9 +201,9 @@ function processWithBlock(
     processExpression(param, context)
   );
   if (conditionValues.length !== 1) {
-    console.error("node.params:", JSON.stringify(node.params, null, 2));
+    console.error('node.params:', JSON.stringify(node.params, null, 2));
     throw new Error(
-      "If condition returned multiple values (not supported ATM)"
+      'If condition returned multiple values (not supported ATM)'
     );
   }
   const [condition] = conditionValues;
@@ -219,7 +219,7 @@ function processCustomBlock(
   context: InterpContext
 ): string[] {
   const helper = processExpression(node.path, context);
-  if (typeof helper !== "function") {
+  if (typeof helper !== 'function') {
     return processProgram(node.program, {
       variables: {
         ...context.variables,
@@ -242,9 +242,9 @@ function processCustomBlock(
 
 function processExpression(node: Expression, context: InterpContext): any {
   switch (node.type) {
-    case "StringLiteral":
+    case 'StringLiteral':
       return (node as StringLiteral).value;
-    case "PathExpression":
+    case 'PathExpression':
       return processPathExpression(node as PathExpression, context);
     default:
       throw new Error(`Unsupported expression type: ${(node as any).type}`);
@@ -256,24 +256,24 @@ function processPathExpression(
   context: InterpContext
 ): any {
   let value = context.variables;
-  if (node.original === "this") {
-    return context.variables["this"];
+  if (node.original === 'this') {
+    return context.variables['this'];
   }
 
-  if (node.original === ".") {
+  if (node.original === '.') {
     return context.variables;
   }
 
   if (
     node.parts.length === 1 &&
-    typeof node.parts[0] === "string" &&
+    typeof node.parts[0] === 'string' &&
     context.options.helpers?.[node.parts[0]]
   ) {
     return context.options.helpers[node.parts[0]];
   }
 
   for (const part of node.parts) {
-    if (typeof part === "string") {
+    if (typeof part === 'string') {
       if (value && part in value) {
         value = value[part];
       } else {
@@ -284,9 +284,9 @@ function processPathExpression(
         }
       }
     } else {
-      console.error("node: ", JSON.stringify(node, null, 2));
+      console.error('node: ', JSON.stringify(node, null, 2));
       // Handle sub-expressions if needed
-      throw new Error("Sub-expressions are not supported yet");
+      throw new Error('Sub-expressions are not supported yet');
     }
   }
   return value;
@@ -313,7 +313,7 @@ export function interp(
 ): string {
   const ast = parse(template);
 
-  return processProgram(ast, { variables, options }).join("");
+  return processProgram(ast, { variables, options }).join('');
 }
 
 export default interp;

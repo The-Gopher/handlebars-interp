@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const specDir = path.join(__dirname, "../spec/mustache/specs");
-const outputDir = path.join(__dirname, "../spec/generated");
+const specDir = path.join(__dirname, '../spec/mustache/specs');
+const outputDir = path.join(__dirname, '../spec/generated');
 
 // Files to generate tests for
-const enabledFiles = ["comments.json", "interpolation.json"];
+const enabledFiles = ['comments.json', 'interpolation.json'];
 
 // Ensure output directory exists
 if (!fs.existsSync(outputDir)) {
@@ -15,14 +15,14 @@ if (!fs.existsSync(outputDir)) {
 }
 
 function escapeString(str) {
-  return str.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$");
+  return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
 }
 
 function generateTestFile(jsonFile) {
   const specPath = path.join(specDir, jsonFile);
-  const spec = JSON.parse(fs.readFileSync(specPath, "utf8"));
+  const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 
-  const baseName = path.basename(jsonFile, ".json");
+  const baseName = path.basename(jsonFile, '.json');
   const outputPath = path.join(outputDir, `${baseName}.spec.ts`);
 
   let output = `// Auto-generated test file from ${jsonFile}\n`;
@@ -35,13 +35,13 @@ function generateTestFile(jsonFile) {
     const template = escapeString(test.template);
     const expected = escapeString(test.expected);
     const dataStr = JSON.stringify(test.data, null, 2)
-      .split("\n")
-      .map((line, idx) => (idx === 0 ? line : "    " + line))
-      .join("\n");
+      .split('\n')
+      .map((line, idx) => (idx === 0 ? line : '    ' + line))
+      .join('\n');
 
     output += `  it("${testName}", () => {\n`;
 
-    if (test.data && typeof test.data === "object" && test.data.lambda) {
+    if (test.data && typeof test.data === 'object' && test.data.lambda) {
       // Handle lambda case
       output += `    const data: any = ${dataStr};\n`;
       output += `    data.lambda = ${test.data.lambda.js};\n`;
@@ -58,7 +58,7 @@ function generateTestFile(jsonFile) {
 
   output += `});\n`;
 
-  fs.writeFileSync(outputPath, output, "utf8");
+  fs.writeFileSync(outputPath, output, 'utf8');
   console.log(`Generated: ${outputPath}`);
 }
 
@@ -67,4 +67,4 @@ enabledFiles.forEach((file) => {
   generateTestFile(file);
 });
 
-console.log("\nTest generation complete!");
+console.log('\nTest generation complete!');

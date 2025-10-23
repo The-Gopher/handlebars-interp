@@ -10,7 +10,7 @@ console.log('\n=== Multiple Variables ===');
 const multi = interp('{{greeting}} {{name}}! You are {{age}} years old.', {
   greeting: 'Hi',
   name: 'Alice',
-  age: 30
+  age: 30,
 });
 console.log(multi); // "Hi Alice! You are 30 years old."
 
@@ -21,8 +21,8 @@ const withHelpers = interp(
   { name: 'world' },
   {
     helpers: {
-      uppercase: (str) => str.toUpperCase()
-    }
+      uppercase: (str) => str.toUpperCase(),
+    },
   }
 );
 console.log(withHelpers); // "Hello WORLD!"
@@ -35,10 +35,9 @@ const conditional = interp(
 );
 console.log(conditional); // "User is active"
 
-const loop = interp(
-  'Users: {{#each users}}{{name}}, {{/each}}',
-  { users: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Charlie' }] }
-);
+const loop = interp('Users: {{#each users}}{{name}}, {{/each}}', {
+  users: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Charlie' }],
+});
 console.log(loop); // "Users: Alice, Bob, Charlie, "
 
 console.log('\n=== Complex Example ===');
@@ -55,7 +54,7 @@ const complex = interp(
   `,
   {
     title: 'Shopping List',
-    items: ['Apples', 'Bananas', 'Oranges']
+    items: ['Apples', 'Bananas', 'Oranges'],
   }
 );
 console.log(complex.trim());

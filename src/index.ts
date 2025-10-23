@@ -261,7 +261,7 @@ function processPathExpression(
   }
 
   if (node.original === ".") {
-    return null;
+    return context.variables;
   }
 
   if (

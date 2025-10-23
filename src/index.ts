@@ -11,8 +11,6 @@ import {
 } from "@handlebars/parser/types/ast";
 import Handlebars from "handlebars";
 
-console.log(Handlebars.escapeExpression);
-
 /**
  * Options for the interp function
  */
@@ -115,7 +113,10 @@ function processBlockStatement(
       return processEachBlock(node, context);
     case "with":
       return processWithBlock(node, context);
+    default:
+      return processCustomBlock(node, context);
   }
+
   throw new Error(`Unsupported block helper: ${node.path.original}`);
 }
 
@@ -211,6 +212,32 @@ function processWithBlock(
     variables: { ...context.variables, this: condition, ...(condition as any) },
     options: context.options,
   });
+}
+
+function processCustomBlock(
+  node: BlockStatement,
+  context: InterpContext
+): string[] {
+  const helper = processExpression(node.path, context);
+  if (typeof helper !== "function") {
+    return processProgram(node.program, {
+      variables: {
+        ...context.variables,
+        this: helper,
+        ...(helper as any),
+      },
+      options: context.options,
+    });
+  }
+
+  const params = node.params.map((param) => processExpression(param, context));
+
+  const options = {
+    data: context.variables,
+    helpers: context.options.helpers,
+  };
+
+  return helper(params, options);
 }
 
 function processExpression(node: Expression, context: InterpContext): any {

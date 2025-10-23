@@ -3,3 +3,4 @@ dist
 coverage
 *.lock
 yarn.lock
+spec/mustache

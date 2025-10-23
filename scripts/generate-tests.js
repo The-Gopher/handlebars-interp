@@ -4,6 +4,10 @@ const fs = require('fs');
 const path = require('path');
 
 const specDir = path.join(__dirname, '../spec/mustache/specs');
+var specFiles = fs
+  .readdirSync(specDir)
+  .filter((name) => /.*\.json$/.test(name));
+
 const outputDir = path.join(__dirname, '../spec/generated');
 
 // Files to generate tests for
@@ -31,6 +35,18 @@ function generateTestFile(jsonFile) {
   output += `describe("${baseName}", () => {\n`;
 
   spec.tests.forEach((test) => {
+    if (
+      // We also choose to throw if partials are not found
+      (jsonFile === 'partials.json' && test.name === 'Failed Lookup') ||
+      // We nest the entire response from partials, not just the literals
+      (jsonFile === 'partials.json' &&
+        test.name === 'Standalone Indentation') ||
+      /\{\{=/.test(test.template) ||
+      Object.values(test.partials || {}).some((value) => /\{\{=/.test(value))
+    ) {
+      return;
+    }
+
     const testName = test.name.replace(/"/g, '\\"');
     const template = escapeString(test.template);
     const expected = escapeString(test.expected);
@@ -63,8 +79,11 @@ function generateTestFile(jsonFile) {
 }
 
 // Generate tests for enabled files
-enabledFiles.forEach((file) => {
-  generateTestFile(file);
+specFiles.forEach((file) => {
+  if (file === '~lambdas.json') {
+  } else {
+    generateTestFile(file);
+  }
 });
 
 console.log('\nTest generation complete!');

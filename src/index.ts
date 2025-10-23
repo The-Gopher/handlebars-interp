@@ -219,7 +219,7 @@ function processCustomBlock(
   context: InterpContext
 ): string[] {
   const helper = processExpression(node.path, context);
-  if (helper === undefined) {
+  if (helper === undefined || helper === false) {
     return [];
   }
   if (typeof helper !== 'function') {

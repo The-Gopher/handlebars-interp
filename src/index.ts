@@ -3,15 +3,15 @@ import {
   BlockStatement,
   ContentStatement,
   Expression,
-  Literal,
   MustacheStatement,
   PathExpression,
   Program,
   Statement,
   StringLiteral,
-  SubExpression,
 } from "@handlebars/parser/types/ast";
 import Handlebars from "handlebars";
+
+console.log(Handlebars.escapeExpression);
 
 /**
  * Options for the interp function
@@ -36,6 +36,8 @@ export interface InterpOptions {
    * Any additional Handlebars compile options
    */
   compileOptions?: CompileOptions;
+
+  escapeExpression?: (str: string) => string;
 }
 
 export interface InterpContext {
@@ -77,14 +79,25 @@ function processMustacheStatement(
     return [];
   }
 
+  let ret = [];
   switch (typeof value) {
     case "function":
       const params = node.params.map((param) =>
         processExpression(param, context)
       );
-      return [value.apply(null, params)];
+
+      ret = [value.apply(null, params)];
+      break;
     default:
-      return [String(value)];
+      ret = [String(value)];
+  }
+
+  if (node.escaped) {
+    return ret.map((s) =>
+      (context.options.escapeExpression || Handlebars.escapeExpression)(s)
+    );
+  } else {
+    return ret;
   }
 }
 
@@ -218,6 +231,10 @@ function processPathExpression(
   let value = context.variables;
   if (node.original === "this") {
     return context.variables["this"];
+  }
+
+  if (node.original === ".") {
+    return null;
   }
 
   if (

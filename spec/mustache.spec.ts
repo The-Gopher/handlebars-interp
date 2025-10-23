@@ -13,7 +13,7 @@ describe("spec", function () {
     .readdirSync(specDir)
     .filter((name: string) => /.*\.json$/.test(name));
 
-  const testFiles = ["comments.json"];
+  const testFiles = ["comments.json", "interpolation.json"];
 
   specs.forEach(function (name: string) {
     if (!testFiles.includes(name)) {
@@ -23,10 +23,9 @@ describe("spec", function () {
 
     var spec = require(specDir + name);
     spec.tests.forEach(function (test: any) {
-      // Our lambda implementation knowingly deviates from the optional Mustache lambda spec
-      // We also do not support alternative delimiters
-
       var data = Object.assign({}, test.data); // Shallow copy
+      console.log("template: ", test.template);
+      console.log("data:", data);
       if (data.lambda) {
         // Blergh
         /* eslint-disable-next-line no-eval */

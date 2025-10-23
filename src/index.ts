@@ -219,6 +219,9 @@ function processCustomBlock(
   context: InterpContext
 ): string[] {
   const helper = processExpression(node.path, context);
+  if (helper === undefined) {
+    return [];
+  }
   if (typeof helper !== 'function') {
     return processProgram(node.program, {
       variables: {

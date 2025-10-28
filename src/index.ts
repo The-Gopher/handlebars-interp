@@ -113,11 +113,22 @@ function processBlockStatement(
       return processEachBlock(node, context);
     case 'with':
       return processWithBlock(node, context);
-    default:
-      return processCustomBlock(node, context);
+  }
+  if (context.variables[node.path.original]) {
+    const value = context.variables[node.path.original];
+
+    const variables = {
+      ...context.variables,
+      this: value,
+      '.': value,
+    };
+    return processProgram(node.program, {
+      variables,
+      options: context.options,
+    });
   }
 
-  throw new Error(`Unsupported block helper: ${node.path.original}`);
+  return processCustomBlock(node, context);
 }
 
 function processIfBlock(
@@ -261,6 +272,9 @@ function processPathExpression(
   context: InterpContext
 ): any {
   let value = context.variables;
+  if (node.original === '.') {
+    return context.variables;
+  }
   if (node.original === 'this') {
     return context.variables['this'];
   }

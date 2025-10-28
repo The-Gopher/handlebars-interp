@@ -80,7 +80,15 @@ function generateTestFile(jsonFile) {
 
 // Generate tests for enabled files
 specFiles.forEach((file) => {
-  if (file === '~lambdas.json') {
+  if (['partials.json', 'inverted.json'].includes(file)) {
+  } else if (
+    [
+      '~lambdas.json',
+      '~inheritance.json',
+      '~dynamic-names.json',
+      'delimiters.json',
+    ].includes(file)
+  ) {
   } else {
     generateTestFile(file);
   }

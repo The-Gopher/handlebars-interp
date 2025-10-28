@@ -219,7 +219,7 @@ function processCustomBlock(
   context: InterpContext
 ): string[] {
   const helper = processExpression(node.path, context);
-  if (helper === undefined || helper === false) {
+  if (helper === undefined || helper === null || helper === false) {
     return [];
   }
   if (typeof helper !== 'function') {
@@ -249,6 +249,8 @@ function processExpression(node: Expression, context: InterpContext): any {
       return (node as StringLiteral).value;
     case 'PathExpression':
       return processPathExpression(node as PathExpression, context);
+    case 'NullLiteral':
+      return null;
     default:
       throw new Error(`Unsupported expression type: ${(node as any).type}`);
   }

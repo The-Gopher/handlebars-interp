@@ -9,7 +9,12 @@ import {
   Statement,
   StringLiteral,
 } from '@handlebars/parser/types/ast';
-import Handlebars from 'handlebars';
+import { HelperDelegate, Template } from 'handlebars';
+import { escapeExpression } from './utils';
+
+export interface CompileOptions {
+  strict?: boolean;
+}
 
 /**
  * Options for the interp function
@@ -18,12 +23,12 @@ export interface InterpOptions {
   /**
    * Custom helpers to register with Handlebars
    */
-  helpers?: Record<string, Handlebars.HelperDelegate>;
+  helpers?: Record<string, HelperDelegate>;
 
   /**
    * Custom partials to register with Handlebars
    */
-  partials?: Record<string, string | Handlebars.Template>;
+  partials?: Record<string, string | Template>;
 
   /**
    * Whether to use strict mode (throws errors on missing properties)
@@ -92,7 +97,7 @@ function processMustacheStatement(
 
   if (node.escaped) {
     return ret.map((s) =>
-      (context.options.escapeExpression || Handlebars.escapeExpression)(s)
+      (context.options.escapeExpression || escapeExpression)(s)
     );
   } else {
     return ret;

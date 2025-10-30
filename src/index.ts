@@ -39,7 +39,7 @@ export interface InterpOptions {
 }
 
 export interface InterpContext {
-  variables: Record<string, any>;
+  variables: [Record<string, any>];
   options: InterpOptions;
 }
 
@@ -114,16 +114,16 @@ function processBlockStatement(
     case 'with':
       return processWithBlock(node, context);
   }
-  if (context.variables[node.path.original]) {
-    const value = context.variables[node.path.original];
-
-    const variables = {
-      ...context.variables,
-      this: value,
-      '.': value,
-    };
+  const value = findInContext(node.path.original, context);
+  if (value) {
+    // If value is a list, iterate over it
+    if (Array.isArray(value)) {
+      return value.flatMap((item) =>
+        processProgram(node.program, pushContext(context, item))
+      );
+    }
     return processProgram(node.program, {
-      variables,
+      variables: [value, ...context.variables] as any,
       options: context.options,
     });
   }
@@ -197,10 +197,7 @@ function processEachBlock(
   }
 
   return (collection as any[]).flatMap((item) =>
-    processProgram(node.program, {
-      variables: { ...context.variables, this: item, ...item },
-      options: context.options,
-    })
+    processProgram(node.program, pushContext(context, item))
   );
 }
 
@@ -219,10 +216,7 @@ function processWithBlock(
   }
   const [condition] = conditionValues;
 
-  return processProgram(node.program, {
-    variables: { ...context.variables, this: condition, ...(condition as any) },
-    options: context.options,
-  });
+  return processProgram(node.program, pushContext(context, condition));
 }
 
 function processCustomBlock(
@@ -234,14 +228,13 @@ function processCustomBlock(
     return [];
   }
   if (typeof helper !== 'function') {
-    return processProgram(node.program, {
-      variables: {
-        ...context.variables,
-        this: helper,
-        ...(helper as any),
-      },
-      options: context.options,
-    });
+    // If helper is a list, iterate over it
+    if (Array.isArray(helper)) {
+      return helper.flatMap((item) =>
+        processProgram(node.program, pushContext(context, item))
+      );
+    }
+    return processProgram(node.program, pushContext(context, helper));
   }
 
   const params = node.params.map((param) => processExpression(param, context));
@@ -267,48 +260,59 @@ function processExpression(node: Expression, context: InterpContext): any {
   }
 }
 
+function pushContext(
+  context: InterpContext,
+  newVars: Record<string, any>
+): InterpContext {
+  return {
+    variables: [newVars, ...context.variables] as any,
+    options: context.options,
+  };
+}
+
 function processPathExpression(
   node: PathExpression,
   context: InterpContext
 ): any {
-  let value = context.variables;
-  if (node.original === '.') {
-    return context.variables;
+  if (node.original === 'this' || node.original === '.') {
+    const root = context.variables[0];
+    return evalTail(root, node.tail);
   }
-  if (node.original === 'this') {
-    return context.variables['this'];
-  }
-
-  if (node.original === '.') {
-    return context.variables;
+  if (typeof node.head === 'string') {
+    const root = findInContext(node.head, context);
+    return evalTail(root, node.tail);
   }
 
-  if (
-    node.parts.length === 1 &&
-    typeof node.parts[0] === 'string' &&
-    context.options.helpers?.[node.parts[0]]
-  ) {
-    return context.options.helpers[node.parts[0]];
+  return undefined;
+}
+
+function findInContext(key: string, context: InterpContext): any {
+  if (context.options.helpers && context.options.helpers[key]) {
+    return context.options.helpers[key];
   }
 
-  for (const part of node.parts) {
-    if (typeof part === 'string') {
-      if (value && part in value) {
-        value = value[part];
-      } else {
-        if (context.options.strict) {
-          throw new Error(`Missing property: ${part}`);
-        } else {
-          return undefined;
-        }
-      }
-    } else {
-      console.error('node: ', JSON.stringify(node, null, 2));
-      // Handle sub-expressions if needed
-      throw new Error('Sub-expressions are not supported yet');
+  for (let i of context.variables) {
+    if (i[key]) {
+      return i[key];
     }
   }
-  return value;
+
+  if (context.options.strict) {
+    throw new Error(`Missing property in strict mode: ${key}`);
+  }
+  return undefined;
+}
+
+function evalTail(obj: any, path: string[]): any {
+  let current = obj;
+  for (const part of path) {
+    if (current && part in current) {
+      current = current[part];
+    } else {
+      return undefined;
+    }
+  }
+  return current;
 }
 
 /**
@@ -332,7 +336,7 @@ export function interp(
 ): string {
   const ast = parse(template);
 
-  return processProgram(ast, { variables, options }).join('');
+  return processProgram(ast, { variables: [variables], options }).join('');
 }
 
 export default interp;

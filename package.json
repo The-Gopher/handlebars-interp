@@ -12,7 +12,8 @@
     "generate-tests": "node scripts/generate-tests.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "prepare": "yarn build"
   },
   "keywords": [
     "handlebars",

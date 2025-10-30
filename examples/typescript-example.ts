@@ -14,7 +14,7 @@ interface User {
 const user: User = {
   name: 'Alice',
   age: 30,
-  isActive: true
+  isActive: true,
 };
 
 const userGreeting = interp(
@@ -29,8 +29,8 @@ const withHelper = interp(
   { amount: 1234.56 },
   {
     helpers: {
-      formatCurrency: (value: number) => `$${value.toFixed(2)}`
-    }
+      formatCurrency: (value: number) => `$${value.toFixed(2)}`,
+    },
   }
 );
 console.log(withHelper); // "Total: $1234.56"

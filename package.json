@@ -9,6 +9,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "generate-tests": "node scripts/generate-tests.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepublishOnly": "yarn build"
   },
   "keywords": [
@@ -30,6 +33,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.9.1",
     "jest": "^30.2.0",
+    "prettier": "^3.6.2",
     "ts-jest": "^29.4.5",
     "typescript": "^5.9.3"
   }

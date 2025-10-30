@@ -32,11 +32,7 @@ test(
 );
 
 // Test 3: Empty variables (should use defaults)
-test(
-  'Empty variables',
-  interp('Hello {{name}}!', {}),
-  'Hello !'
-);
+test('Empty variables', interp('Hello {{name}}!', {}), 'Hello !');
 
 // Test 4: With helper
 test(
@@ -73,25 +69,17 @@ test(
 // Test 8: Nested properties
 test(
   'Nested properties',
-  interp('{{user.name}} - {{user.email}}', { 
-    user: { name: 'John', email: 'john@example.com' } 
+  interp('{{user.name}} - {{user.email}}', {
+    user: { name: 'John', email: 'john@example.com' },
   }),
   'John - john@example.com'
 );
 
 // Test 9: No template variables
-test(
-  'No template variables',
-  interp('Just plain text'),
-  'Just plain text'
-);
+test('No template variables', interp('Just plain text'), 'Just plain text');
 
 // Test 10: Empty template
-test(
-  'Empty template',
-  interp('', { name: 'World' }),
-  ''
-);
+test('Empty template', interp('', { name: 'World' }), '');
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

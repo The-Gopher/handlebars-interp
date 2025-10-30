@@ -15,3 +15,4 @@ node_modules
 /dist/
 /tests/integration/*/dist/
 /spec/tmp/*
+/spec/generated/

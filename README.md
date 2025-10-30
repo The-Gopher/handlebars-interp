@@ -28,8 +28,8 @@ const template = 'Hello {{uppercase name}}!';
 const variables = { name: 'world' };
 const options = {
   helpers: {
-    uppercase: (str: string) => str.toUpperCase()
-  }
+    uppercase: (str: string) => str.toUpperCase(),
+  },
 };
 
 const result = interp(template, variables, options);
